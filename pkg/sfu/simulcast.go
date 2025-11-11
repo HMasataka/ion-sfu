@@ -1,3 +1,11 @@
+/*
+【ファイル概要: simulcast.go】
+Simulcast関連の設定と補助構造体。
+
+Simulcast（複数品質ストリーム）の設定と、
+レイヤー切り替え時の状態管理を提供します。
+VP8のテンポラルスケーラビリティもサポートします。
+*/
 package sfu
 
 import "time"

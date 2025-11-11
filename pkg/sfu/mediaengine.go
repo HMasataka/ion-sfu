@@ -1,3 +1,11 @@
+/*
+【ファイル概要: mediaengine.go】
+MediaEngineの設定と初期化。
+
+サポートするコーデック（Opus、VP8、VP9、H264）と
+RTPヘッダー拡張（TWCC、AudioLevel、StreamIDなど）を登録します。
+パブリッシャーとサブスクライバーで異なる設定を使用します。
+*/
 package sfu
 
 import (

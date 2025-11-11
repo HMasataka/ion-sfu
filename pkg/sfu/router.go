@@ -1,3 +1,32 @@
+/*
+【ファイル概要: router.go】
+ルーターはメディアストリームのルーティングロジックを実装します。
+
+【主要な役割】
+1. Receiver管理
+   - RTPReceiverからReceiverオブジェクトへの変換
+   - トラックIDによるReceiver検索
+   - 同じトラックの複数レイヤー（Simulcast）のサポート
+
+2. DownTrack作成と管理
+   - Receiverからサブスクライバーへのダウントラックの作成
+   - コーデック情報の伝播
+   - トラックのバインドとアンバインド
+
+3. RTCPフィードバック処理
+   - フィードバックチャネルの集約
+   - PLI/FIRのソースSSRCへの転送
+   - Transport-wide Congestion Control (TWCC)
+
+4. 統計収集
+   - ストリームごとの統計
+   - 送信者レポートの処理
+   - ドリフト計算（同期用）
+
+【Transport-wide CC】
+ビデオトラックに対して、TWCCレスポンダーを使用し、
+クライアントからのTWCCフィードバックを処理します。
+*/
 package sfu
 
 import (

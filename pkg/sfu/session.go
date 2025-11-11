@@ -1,3 +1,34 @@
+/*
+【ファイル概要: session.go】
+このファイルはセッション管理の実装を提供します。
+
+【主要な役割】
+1. セッションの定義と実装
+  - Session interface: セッションの公開API
+  - SessionLocal: セッションの具体実装
+
+2. ピア管理
+  - ピアの追加・削除・検索
+  - リレーピアの管理
+  - ピア間のメディアルーティング
+
+3. Pub/Sub機能
+  - Publish: パブリッシャーのメディアをすべてのサブスクライバーに配信
+  - Subscribe: 新しいサブスクライバーを既存のパブリッシャーに接続
+
+4. データチャネル管理
+  - ファンアウト型データチャネルの管理
+  - データチャネルメッセージのブロードキャスト
+
+5. 音声レベル監視
+  - AudioObserverによる音声レベルの追跡
+  - "誰が話しているか"機能の実装
+
+【セッションのアーキテクチャ】
+- セッション内のすべてのパブリッシャーは、自動的にすべてのサブスクライバーに接続されます
+- 各ピアは通常、パブリッシャーとサブスクライバーの両方の役割を持ちます
+- セッションは独立したメディアルーティングスコープを提供します
+*/
 package sfu
 
 import (
@@ -12,8 +43,18 @@ import (
 	"github.com/pion/webrtc/v3"
 )
 
-// Session represents a set of peers. Transports inside a SessionLocal
-// are automatically subscribed to each other.
+/*
+Session はピアのセットを表すインターフェースです。
+セッション内のトランスポートは自動的に互いにサブスクライブされます。
+
+【主要メソッド】
+- Publish: ルーターとレシーバーをセッション内のすべてのサブスクライバーに公開
+- Subscribe: 新しいピアを既存のパブリッシャーにサブスクライブ
+- AddPeer/RemovePeer: ピアのライフサイクル管理
+- AddRelayPeer: リモートSFUからのリレーピアを追加
+- AudioObserver: 音声レベル監視へのアクセス
+- GetDataChannels/FanOutMessage: データチャネル通信
+*/
 type Session interface {
 	ID() string
 	Publish(router Router, r Receiver)
@@ -32,6 +73,22 @@ type Session interface {
 	RelayPeers() []*RelayPeer
 }
 
+/*
+SessionLocal はSessionインターフェースの具体実装です。
+
+【フィールド説明】
+- id: セッションの一意識別子
+- peers: ピアIDをキーとしたピアマップ
+- relayPeers: リレーピアのマップ（SFU間通信用）
+- closed: セッションが閉じられたかどうかのアトミックフラグ
+- audioObs: 音声レベル監視機能
+- fanOutDCs: ファンアウト型データチャネルのラベルリスト
+- datachannels: 登録されたデータチャネルミドルウェア
+- onCloseHandler: セッションクローズ時のコールバック
+
+【スレッドセーフティ】
+sync.RWMutexを使用して、ピアとリレーピアマップへの同時アクセスを保護します。
+*/
 type SessionLocal struct {
 	id             string
 	mu             sync.RWMutex
@@ -45,6 +102,10 @@ type SessionLocal struct {
 	onCloseHandler func()
 }
 
+/*
+AudioLevelsMethod はAPIデータチャネルで音声レベル情報を送信する際のメソッド名です。
+クライアント側はこのメソッド名を使って音声レベルメッセージを識別します。
+*/
 const (
 	AudioLevelsMethod = "audioLevels"
 )
