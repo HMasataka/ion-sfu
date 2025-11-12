@@ -18,8 +18,14 @@ const frameMarking = "urn:ietf:params:rtp-hdrext:framemarking"
 func getPublisherMediaEngine() (*webrtc.MediaEngine, error) {
 	me := &webrtc.MediaEngine{}
 	if err := me.RegisterCodec(webrtc.RTPCodecParameters{
-		RTPCodecCapability: webrtc.RTPCodecCapability{MimeType: webrtc.MimeTypeOpus, ClockRate: 48000, Channels: 2, SDPFmtpLine: "minptime=10;useinbandfec=1", RTCPFeedback: nil},
-		PayloadType:        111,
+		RTPCodecCapability: webrtc.RTPCodecCapability{
+			MimeType:     webrtc.MimeTypeOpus,
+			ClockRate:    48000,
+			Channels:     2,
+			SDPFmtpLine:  "minptime=10;useinbandfec=1",
+			RTCPFeedback: nil,
+		},
+		PayloadType: 111,
 	}, webrtc.RTPCodecTypeAudio); err != nil {
 		return nil, err
 	}

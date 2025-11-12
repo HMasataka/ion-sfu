@@ -4,23 +4,23 @@
 
 【主要な役割】
 1. 着信メディアトラックの受信
-   - OnTrackコールバックでトラックを検出
-   - Receiverの作成とRouterへの登録
-   - セッション内の他のピアへの自動配信
+  - OnTrackコールバックでトラックを検出
+  - Receiverの作成とRouterへの登録
+  - セッション内の他のピアへの自動配信
 
 2. WebRTC PeerConnection管理
-   - Publisher専用のPeerConnection
-   - Answer生成（ピアのOfferに対して）
-   - ICE候補の処理
+  - Publisher専用のPeerConnection
+  - Answer生成（ピアのOfferに対して）
+  - ICE候補の処理
 
 3. リレー機能
-   - 他のSFUへのメディア転送
-   - SFU間のカスケード接続を実現
-   - Sender Reportの定期的な送信
+  - 他のSFUへのメディア転送
+  - SFU間のカスケード接続を実現
+  - Sender Reportの定期的な送信
 
 4. データチャネル処理
-   - APIチャネルの終端
-   - カスタムデータチャネルのセッションへの追加
+  - APIチャネルの終端
+  - カスタムデータチャネルのセッションへの追加
 
 【重要な概念】
 - PublisherTrack: トラックとレシーバーのペア

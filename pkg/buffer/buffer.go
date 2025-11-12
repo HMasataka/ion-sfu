@@ -1,3 +1,44 @@
+/*
+【ファイル概要: buffer.go】
+Bufferは着信RTPパケットのバッファリング、再送制御、統計収集を行うコアコンポーネントです。
+
+【主要な役割】
+1. RTPパケットのバッファリング
+  - 順序が乱れたパケットの受信と並び替え
+  - 固定サイズのリングバッファによる効率的なメモリ管理
+  - ExtPacket形式でのパケット拡張（メタデータ付き）
+
+2. NACK（再送制御）
+  - パケット損失の検出
+  - NACK要求の生成と管理
+  - キーフレーム要求（パケット損失が多い場合）
+
+3. RTCPフィードバック生成
+  - Receiver Report（RR）の作成
+  - REMB（Receiver Estimated Maximum Bitrate）の生成
+  - Transport-Wide Congestion Control（TWCC）のサポート
+
+4. 統計情報の収集
+  - パケット損失率の計算
+  - ジッター（パケット到着時間のばらつき）測定
+  - ビットレートの推定
+  - Sender Reportデータの保存
+
+5. コーデック固有の処理
+  - VP8: Temporal Layer検出、キーフレーム判定
+  - H.264: キーフレーム判定
+  - Audio: 音声レベル検出
+
+【アーキテクチャ】
+- Bucketを使用した循環バッファ
+- NACKキューによるパケット再送管理
+- dequeを使用したExtPacketのキューイング
+- コールバックベースのイベント通知
+
+【スレッドセーフティ】
+- sync.Mutexによる排他制御
+- atomic操作による高速な読み取り専用アクセス
+*/
 package buffer
 
 import (

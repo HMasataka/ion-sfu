@@ -1,3 +1,51 @@
+/*
+【ファイル概要: factory.go】
+FactoryはBufferとRTCPReaderの集中管理とプーリングを提供します。
+
+【主要な役割】
+1. オブジェクトの集中管理
+  - SSRC（同期ソース識別子）ごとにBufferを管理
+  - SSRCごとにRTCPReaderを管理
+  - マップによる高速なオブジェクト検索
+
+2. メモリプーリング
+  - videoPool: ビデオ用バッファのプール
+  - audioPool: 音声用バッファのプール
+  - sync.Poolによるメモリ再利用でGC負荷を軽減
+
+3. ライフサイクル管理
+  - GetOrNew: 既存オブジェクトの取得または新規作成
+  - OnCloseコールバックによる自動クリーンアップ
+  - Bufferが閉じられると自動的にマップから削除
+
+4. ペアアクセス
+  - GetBufferPair: BufferとRTCPReaderを同時取得
+  - RTPとRTCPの処理を簡素化
+
+【メモリプール設計】
+  - videoPool: trackingPackets * maxPktSize バイト
+    例: 500パケット × 1500バイト = 750KB
+  - audioPool: maxPktSize * 25 バイト
+    例: 1500バイト × 25 = 37.5KB
+
+音声は小さいパケットが多いため、ビデオより小さいバッファを使用。
+
+【スレッドセーフティ】
+- sync.RWMutexによる排他制御
+- 読み取り操作は並行実行可能（RLock）
+- 書き込み操作は排他的（Lock）
+
+【使用パターン】
+
+ 1. Factoryを作成
+    factory := NewBufferFactory(500, logger)
+
+ 2. WebRTC RTPReceiverごとにBufferを取得
+    buf := factory.GetOrNew(packetio.RTPBufferPacket, ssrc)
+
+ 3. WebRTC RTCPReceiverごとにRTCPReaderを取得
+    reader := factory.GetOrNew(packetio.RTCPBufferPacket, ssrc)
+*/
 package buffer
 
 import (

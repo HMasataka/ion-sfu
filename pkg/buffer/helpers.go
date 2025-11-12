@@ -1,3 +1,74 @@
+/*
+【ファイル概要: helpers.go】
+ヘルパー関数とユーティリティ型を提供します。
+
+【主要な役割】
+1. atomicBool型
+  - boolのスレッドセーフな実装
+  - atomic操作によるロックフリーアクセス
+  - set()/get()メソッドで簡単に使用可能
+
+2. VP8ペイロード解析
+  - VP8 RTPペイロード記述子のパース
+  - Temporal Layer情報の抽出
+  - Picture ID、TL0PICIDX、TIDの取得
+  - キーフレーム検出
+
+3. H.264キーフレーム検出
+  - H.264 NALUタイプの判定
+  - IDR（Instantaneous Decoder Refresh）フレームの検出
+  - STAP-A/B、MTAP、FU-A/Bの処理
+
+【VP8ペイロード記述子】
+RFC 7741で定義されたVP8 RTPペイロード形式:
+
+基本フォーマット:
+
+	0 1 2 3 4 5 6 7
+	+-+-+-+-+-+-+-+-+
+	|X|R|N|S|R| PID | (REQUIRED)
+	+-+-+-+-+-+-+-+-+
+
+拡張フォーマット（X=1の場合）:
+
+	|I|L|T|K| RSV   | (OPTIONAL)
+	+-+-+-+-+-+-+-+-+
+	|M| PictureID   | (OPTIONAL, I=1)
+	+-+-+-+-+-+-+-+-+
+	|   TL0PICIDX   | (OPTIONAL, L=1)
+	+-+-+-+-+-+-+-+-+
+	|TID|Y| KEYIDX  | (OPTIONAL, T=1 or K=1)
+	+-+-+-+-+-+-+-+-+
+
+フィールド説明:
+- X: 拡張ビット（1=拡張フィールドあり）
+- S: Start of VP8 partition（1=パーティション開始）
+- PictureID: フレーム識別子（7または15ビット）
+- TL0PICIDX: Temporal layer 0のインデックス
+- TID: Temporal layer ID（0-3）
+
+【H.264 NALUタイプ】
+NALUタイプ（下位5ビット）:
+- 1-23: 単一NALUパケット
+- 5: IDRスライス（キーフレーム）
+- 24: STAP-A（単一時刻集約パケット）
+- 25: STAP-B
+- 26: MTAP16
+- 27: MTAP24
+- 28: FU-A（分割ユニット）
+- 29: FU-B
+
+【タイムスタンプ処理】
+RTPタイムスタンプは32ビットでラップアラウンドします:
+- IsTimestampWrapAround: ラップアラウンド検出
+- IsLaterTimestamp: ラップアラウンドを考慮した時刻比較
+
+ラップアラウンド例:
+
+	timestamp1 = 0xFFFFFFFF (最大値)
+	timestamp2 = 0x00000001 (ラップアラウンド後)
+	→ timestamp2 > timestamp1 (時間的に後)
+*/
 package buffer
 
 import (
